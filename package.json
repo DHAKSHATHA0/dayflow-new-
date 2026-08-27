@@ -1,0 +1,15 @@
+{
+  "name": "dayflow-hrms",
+  "version": "1.0.0",
+  "description": "Dayflow - Human Resource Management System. Every workday, perfectly aligned.",
+  "private": true,
+  "scripts": {
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "build:frontend": "npm run build --prefix frontend",
+    "build:backend": "npm run build --prefix backend",
+    "prisma:seed": "npm run prisma:seed --prefix backend",
+    "prisma:push": "npm run prisma:push --prefix backend",
+    "test:backend": "npm run test --prefix backend"
+  }
+}

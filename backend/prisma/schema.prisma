@@ -1,0 +1,166 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  employee
+  admin
+}
+
+enum LeaveStatus {
+  pending
+  approved
+  rejected
+}
+
+enum AttendanceStatus {
+  present
+  late
+  remote
+  half_day
+  absent
+  leave
+}
+
+model User {
+  id                String            @id @default(cuid())
+  employeeId        String            @unique
+  name              String
+  email             String            @unique
+  passwordHash      String
+  role              Role              @default(employee)
+  emailVerified     Boolean           @default(false)
+  verificationToken String?
+  resetToken        String?
+  resetTokenExpiry  DateTime?
+  profile           EmployeeProfile?
+  notifications     Notification[]
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+}
+
+model EmployeeProfile {
+  id             String       @id @default(cuid())
+  userId         String       @unique
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  employeeId     String       @unique
+  phone          String?      @default("")
+  address        String?      @default("")
+  dateOfBirth    String?      @default("")
+  profilePicture String?      @default("")
+  department     String       @default("General")
+  designation    String       @default("Team Member")
+  joiningDate    String       @default("")
+  employmentType String       @default("Full-time")
+  manager        String?      @default("")
+  location       String       @default("Office")
+  initials       String       @default("DF")
+  color          String       @default("#d47f68")
+  documents      Document[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Attendance {
+  id           String           @id @default(cuid())
+  employeeId   String
+  date         String           // YYYY-MM-DD
+  checkIn      String?          // HH:mm or HH:mm:ss
+  checkOut     String?          // HH:mm or HH:mm:ss
+  workingHours Float            @default(0.0)
+  status       AttendanceStatus @default(present)
+  notes        String?          @default("")
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@unique([employeeId, date])
+  @@index([employeeId])
+  @@index([date])
+}
+
+model LeaveRequest {
+  id            String      @id @default(cuid())
+  employeeId    String
+  leaveType     String      // "Paid leave", "Sick leave", "Unpaid leave"
+  startDate     String      // YYYY-MM-DD
+  endDate       String      // YYYY-MM-DD
+  days          Float       @default(1.0)
+  remarks       String      @default("")
+  status        LeaveStatus @default(pending)
+  reviewedBy    String?
+  reviewComment String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([employeeId])
+  @@index([status])
+}
+
+model Salary {
+  id            String   @id @default(cuid())
+  employeeId    String   @unique
+  basicSalary   Float    @default(0.0)
+  allowances    Float    @default(0.0)
+  deductions    Float    @default(0.0)
+  netSalary     Float    @default(0.0)
+  effectiveFrom DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([employeeId])
+}
+
+model SalaryHistory {
+  id            String   @id @default(cuid())
+  employeeId    String
+  basicSalary   Float
+  allowances    Float
+  deductions    Float
+  netSalary     Float
+  changeReason  String?  @default("Salary adjustment")
+  effectiveFrom DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  @@index([employeeId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   @default("system") // "leave", "attendance", "payroll", "profile", "system"
+  isRead    Boolean  @default(false)
+  link      String?  @default("")
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+}
+
+model Document {
+  id           String          @id @default(cuid())
+  employeeId   String
+  profile      EmployeeProfile @relation(fields: [employeeId], references: [employeeId], onDelete: Cascade)
+  name         String
+  fileUrl      String
+  documentType String          @default("other") // "id_proof", "offer_letter", "contract", "other"
+  fileSize     String?         @default("")
+  createdAt    DateTime        @default(now())
+
+  @@index([employeeId])
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  category  String   @default("general")
+  updatedAt DateTime @updatedAt
+}
