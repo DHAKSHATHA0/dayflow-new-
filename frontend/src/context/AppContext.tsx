@@ -104,14 +104,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
             localStorage.setItem('dayflow_user', JSON.stringify(res.data.user));
             await Promise.all([refreshProfile(), refreshNotifications(), refreshTodayAttendance()]);
           } else {
-            setUser(null);
-            localStorage.removeItem('dayflow_token');
-            localStorage.removeItem('dayflow_user');
+            const cached = readLocal<User | null>('dayflow_user', null);
+            if (cached) {
+              setUser(cached);
+              await Promise.all([refreshProfile(), refreshNotifications(), refreshTodayAttendance()]);
+            }
           }
         } catch {
-          setUser(null);
-          localStorage.removeItem('dayflow_token');
-          localStorage.removeItem('dayflow_user');
+          const cached = readLocal<User | null>('dayflow_user', null);
+          if (cached) {
+            setUser(cached);
+          }
         }
       }
       setIsLoading(false);
@@ -128,6 +131,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const res = await authApi.login({
         email: identifier,
         password: effectivePassword,
+        role,
       });
 
       if (res.success && res.data) {

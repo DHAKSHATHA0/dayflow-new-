@@ -581,13 +581,13 @@ function Landing() {
 // --- AUTHENTICATION PAGES ---
 
 function Auth({ mode }: { mode: 'signin' | 'signup' }) {
-  const { signIn, signUp } = useApp();
+  const { user, isLoading, signIn, signUp } = useApp();
   const [, setLocation] = useLocation();
   const [role, setRole] = useState<Role>('employee');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('maya.chen@dayflow.co');
   const [password, setPassword] = useState('Employee@123');
-  const [id, setId] = useState('DF-1042');
+  const [id, setId] = useState('maya.chen@dayflow.co');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showForgot, setShowForgot] = useState(false);
@@ -595,6 +595,12 @@ function Auth({ mode }: { mode: 'signin' | 'signup' }) {
   const [forgotToken, setForgotToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [forgotStep, setForgotStep] = useState<'request' | 'reset'>('request');
+
+  useEffect(() => {
+    if (!isLoading && user) {
+      setLocation(user.role === 'admin' ? '/admin/dashboard' : '/employee/dashboard');
+    }
+  }, [user, isLoading, setLocation]);
 
   const handleRoleSwitch = (r: Role) => {
     setRole(r);

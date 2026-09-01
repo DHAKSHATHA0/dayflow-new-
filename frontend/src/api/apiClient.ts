@@ -1,13 +1,18 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// When running with Vite proxy or hosted, use relative /api by default unless VITE_API_URL is specified
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  (typeof window !== 'undefined' && window.location.origin.includes(':5173')
+    ? '/api'
+    : 'http://localhost:5000/api');
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 15000,
+  timeout: 3500,
 });
 
 // Request interceptor to attach JWT Bearer token
